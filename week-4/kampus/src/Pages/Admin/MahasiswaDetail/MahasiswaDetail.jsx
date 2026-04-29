@@ -1,13 +1,13 @@
 import Card from "@/Pages/Admin/Components/Card";
 import Heading from "@/Pages/Admin/Components/Heading";
-
+import { mahasiswaList } from "@/Data/Dummy";
 
 const MahasiswaDetail = () => {
-  const data = JSON.parse(localStorage.getItem("mahasiswa")) || [];
+  
   const path = window.location.pathname;
   const nim = path.split("/").pop();
 
-  const mahasiswa = data.find((m) => m.nim === nim);
+  const mahasiswa = mahasiswaList.find((m) => m.nim === nim);
 
   if (!mahasiswa) {
     return <p className="text-red-600">Data mahasiswa tidak ditemukan.</p>;
@@ -29,7 +29,7 @@ const MahasiswaDetail = () => {
           <tr>
             <td className="py-2 px-4 font-medium">Status</td>
             <td className="py-2 px-4">
-              {mahasiswa.status ? "Aktif" : "Tidak Aktif"}
+              {mahasiswa.status ? "Aktif" : "Nonaktif"}
             </td>
           </tr>
         </tbody>

@@ -7,24 +7,29 @@ import { mahasiswaList } from "@/Data/Dummy";
 
 const Mahasiswa = () => {
   const [mahasiswa, setMahasiswa] = useState(mahasiswaList);
+
+  const [selectedNim, setSelectedNim] = useState(null);
   const handleEdit = (data) => {
     setForm(data);
+    setSelectedNim(data.nim);
     setIsEdit(true);
     setModalOpen(true);
   };
+
   const handleDelete = (nim) => {
     if (!confirm("Yakin ingin hapus?")) return;
 
     setMahasiswa(mahasiswa.filter((m) => m.nim !== nim));
   };
+
   const [isModalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-
   const [form, setForm] = useState({
     nim: "",
     nama: "",
     status: true,
   });
+
 const handleSubmit = (e) => {
   e.preventDefault();
 
@@ -47,14 +52,13 @@ const handleSubmit = (e) => {
     if (!confirm("Yakin update data?")) return;
 
     newData = mahasiswa.map((m) =>
-      m.nim === form.nim ? form : m
+      m.nim === selectedNim ? form : m
     );
   } else {
     newData = [...mahasiswa, form];
   }
 
   setMahasiswa(newData);
-  localStorage.setItem("mahasiswa", JSON.stringify(newData));
 
   setModalOpen(false);
 };
