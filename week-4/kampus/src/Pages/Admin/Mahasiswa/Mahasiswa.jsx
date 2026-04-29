@@ -2,187 +2,94 @@ import { useState } from "react";
 import Card from "@/Pages/Admin/Components/Card";
 import Heading from "@/Pages/Admin/Components/Heading";
 import Button from "@/Pages/Admin/Components/Button";
-
+import MahasiswaModal from "./MahasiswaModal";
+import MahasiswaTable from "./MahasiswaTable";
 import { mahasiswaList } from "@/Data/Dummy";
+import { confirmDelete } from "@/Helper/SwalHelper";
+import {
+  toastStoreSuccess,
+  toastStoreFailed,
+  toastUpdateSuccess,
+  toastUpdateFailed,
+  toastDeleteSuccess,
+  toastDeleteFailed,
+} from "@/Helper/ToastHelper";
 
 const Mahasiswa = () => {
   const [mahasiswa, setMahasiswa] = useState(mahasiswaList);
+  const [selectedMahasiswa, setSelectedMahasiswa] = useState(null);
+  const [isModalOpen, setModalOpen] = useState(false);
 
-  const [selectedNim, setSelectedNim] = useState(null);
-  const handleEdit = (data) => {
-    setForm(data);
-    setSelectedNim(data.nim);
-    setIsEdit(true);
+  const storeMahasiswa = (data) => {
+    try {
+      setMahasiswa((prev) => [...prev, data]);
+      toastStoreSuccess(data.nama);
+    } catch {
+      toastStoreFailed();
+    }
+  };
+
+  const updateMahasiswa = (data) => {
+    try {
+      setMahasiswa((prev) => prev.map((m) => (m.nim === data.nim ? data : m)));
+      toastUpdateSuccess(data.nama);
+    } catch {
+      toastUpdateFailed();
+    }
+  };
+
+  const deleteMahasiswa = async (nim) => {
+    const target = mahasiswa.find((m) => m.nim === nim);
+    if (!target) return;
+
+    const confirmed = await confirmDelete(target.nama);
+    if (!confirmed) return;
+
+    try {
+      setMahasiswa((prev) => prev.filter((m) => m.nim !== nim));
+      toastDeleteSuccess(target.nama);
+    } catch {
+      toastDeleteFailed();
+    }
+  };
+
+  const openAddModal = () => {
+    setSelectedMahasiswa(null);
     setModalOpen(true);
   };
 
-  const handleDelete = (nim) => {
-    if (!confirm("Yakin ingin hapus?")) return;
-
-    setMahasiswa(mahasiswa.filter((m) => m.nim !== nim));
+  const openEditModal = (mhs) => {
+    setSelectedMahasiswa(mhs);
+    setModalOpen(true);
   };
 
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
-  const [form, setForm] = useState({
-    nim: "",
-    nama: "",
-    status: true,
-  });
-
-const handleSubmit = (e) => {
-  e.preventDefault();
-
-  if (!form.nim || !form.nama) {
-    alert("Data belum lengkap!");
-    return;
-  }
-
-  if (!isEdit) {
-    const isExist = mahasiswa.some((m) => m.nim === form.nim);
-    if (isExist) {
-      alert("NIM sudah ada!");
-      return;
+  const handleSubmit = (formData, isEdit) => {
+    if (isEdit) {
+      updateMahasiswa(formData);
+    } else {
+      storeMahasiswa(formData);
     }
-  }
-
-  let newData;
-
-  if (isEdit) {
-    if (!confirm("Yakin update data?")) return;
-
-    newData = mahasiswa.map((m) =>
-      m.nim === selectedNim ? form : m
-    );
-  } else {
-    newData = [...mahasiswa, form];
-  }
-
-  setMahasiswa(newData);
-
-  setModalOpen(false);
-};
+  };
 
   return (
     <Card>
       <div className="flex justify-between items-center mb-4">
-        <Heading as="h2" className="mb-0 text-left">Daftar Mahasiswa</Heading>
-        <Button
-          onClick={() => {
-            setForm({ nim: "", nama: "", status: true });
-            setIsEdit(false);
-            setModalOpen(true);
-          }}
-        >
-          + Tambah Mahasiswa
-        </Button>
+        <Heading as="h2" className="mb-0 text-left">
+          Daftar Mahasiswa
+        </Heading>
+        <Button onClick={openAddModal}>+ Tambah Mahasiswa</Button>
       </div>
-
-      <table className="w-full text-sm text-gray-700">
-        <thead className="bg-blue-600 text-white">
-          <tr>
-            <th className="py-2 px-4 text-left">NIM</th>
-            <th className="py-2 px-4 text-left">Nama</th>
-            <th className="py-2 px-4 text-left">Status</th>
-            <th className="py-2 px-4 text-center">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mahasiswa.map((mhs, index) => (
-            <tr
-              key={mhs.nim}
-              className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
-            >
-              <td className="py-2 px-4">{mhs.nim}</td>
-              <td className="py-2 px-4">{mhs.nama}</td>
-              <td className="py-2 px-4">
-                {mhs.status ? "Aktif" : "Nonaktif"}
-              </td>
-              <td className="py-2 px-4 text-center space-x-2">
-                <a
-                  href={`/admin/mahasiswa/${mhs.nim}`}
-                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
-                >
-                  Detail
-                </a>
-                <Button
-                  size="sm"
-                  variant="warning"
-                  onClick={() => handleEdit(mhs)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="danger"
-                  onClick={() => handleDelete(mhs.nim)}
-                >
-                  Hapus
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {isModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-white/20 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded w-96 shadow-lg">
-            <h2 className="text-lg font-bold mb-4">
-              {isEdit ? "Edit" : "Tambah"} Mahasiswa
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <input
-                name="nim"
-                value={form.nim}
-                onChange={(e) =>
-                  setForm({ ...form, nim: e.target.value })
-                }
-                placeholder="NIM"
-                className="w-full border p-2"
-              />
-
-              <input
-                name="nama"
-                value={form.nama}
-                onChange={(e) =>
-                  setForm({ ...form, nama: e.target.value })
-                }
-                placeholder="Nama"
-                className="w-full border p-2"
-              />
-              <select
-                name="status"
-                value={form.status}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    status: e.target.value === "true",
-                  })
-                }
-                className="w-full border p-2"
-              >
-                <option value="true">Aktif</option>
-                <option value="false">Nonaktif</option>
-              </select>
-
-              <div className="flex justify-end gap-2">
-                <Button type="submit" variant="primary">
-                  Simpan
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setModalOpen(false)}
-                >
-                  Batal
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <MahasiswaTable
+        mahasiswa={mahasiswa}
+        openEditModal={openEditModal}
+        onDelete={deleteMahasiswa}
+      />
+      <MahasiswaModal
+        isModalOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleSubmit}
+        selectedMahasiswa={selectedMahasiswa}
+      />
     </Card>
   );
 };

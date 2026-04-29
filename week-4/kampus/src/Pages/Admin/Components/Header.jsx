@@ -1,9 +1,18 @@
 import Button from "@/Pages/Admin/Components/Button";
+import { confirmLogout } from "@/Helper/SwalHelper";
 
 const Header = () => {
   const toggleProfileMenu = () => {
     const menu = document.getElementById("profileMenu");
     if (menu) menu.classList.toggle("hidden");
+  };
+
+  const handleLogout = async () => {
+    const confirmed = await confirmLogout();
+    if (!confirmed) return;
+
+    localStorage.removeItem("user");
+    location.href = "/";
   };
 
   return (
@@ -23,10 +32,7 @@ const Header = () => {
               Profile
             </a>
             <button
-              onClick={() => {
-                localStorage.removeItem("user");
-                location.href = "/";
-              }}
+              onClick={handleLogout}
               className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
             >
               Logout
